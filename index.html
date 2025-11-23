@@ -3,68 +3,543 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Seite mit Import</title>
+    <title>Mobile App Layout</title>
+    <!-- Tailwind CSS CDN für einfache und responsive Gestaltung -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js CDN, um Markdown-Inhalte aus den externen Dateien in HTML umzuwandeln -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <!-- Google Fonts: Inter für bessere Lesbarkeit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Einfaches, fingerfreundliches Design */
+    
+/* Spezielle Klasse für scrollbaren Text */
+.scroll-text {
+  overflow-y: auto;       /* Erzeugt vertikalen Scrollbalken bei Bedarf */
+  align-items: flex-start !important; /* Text beginnt oben, nicht in der Mitte */
+  justify-content: flex-start !important; /* Links-bündig (optional) */
+  text-align: left;       /* Text linksbündig lesen sich besser */
+  padding: 12px;          /* Innenabstand, damit Text nicht am Rand klebt */
+  box-sizing: border-box; /* Padding wird in die Breite eingerechnet */
+}
+
+/* Optional: Hübscherer Scrollbalken (wirkt auf Chrome/Safari/Edge) */
+.scroll-text::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-text::-webkit-scrollbar-track {
+  background: yellowgreen;
+}
+.scroll-text::-webkit-scrollbar-thumb {
+  background-color: white;
+  /*background-color: rgba(0,0,0,0.2);*/
+  border-radius: 3px;
+}
+/* Ende Scrollbalken*/
+
+
+    
+.wrap{
+  max-width:var(--max-width);
+  margin:0 auto;
+}
+
+/* Grid: 2 Spalten x 2 Reihen */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:2px;
+/*  gap:var(--gap); */
+/*  background: #0f172a;*/
+    background: lightblue;
+}
+
+/* Frame: Höhe = 2/3 der Breite -> aspect-ratio 3/2 (Breite: 3, Höhe:2) */
+.frame{
+  background:var(--frame-bg);
+  border-radius:var(--radius);
+  overflow:hidden;
+  position:relative;
+  /* moderne Browser */
+  aspect-ratio: 3 / 2; /* width / height -> Höhe = 2/3 der Breite */
+}
+
+/* Fallback für ältere Browser: Erstellt einen Block mit 66.6667% Höhe der Breite */
+.frame::before{
+  content: "";
+  display:block;
+  padding-top:66.6667%; /* 2/3 * 100% */
+}
+
+/* Inneres Layer, absolut positioniert, füllt das Frame */
+.frame > .content{
+  position:absolute;
+  inset:0; /* top:0; right:0; bottom:0; left:0 */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  padding: 10px;
+}
+
+/* Bild unverzerrt vollständig anzeigen: */
+.frame img{
+  width:100%;
+  height:100%;
+  object-fit:contain; /* wichtig: whole image visible, no distortion, letterboxing if needed */
+  object-position:center;
+  display:block;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
+/* Kleine Optik-Anpassungen für sehr kleine Bildschirme */
+@media (max-width:360px){
+  body{padding:10px}
+  :root{--gap:8px; --radius:8px}
+}
+
+/* Ende neu für Grid */
+
+
+        /* Grundlegende dunkle Stile und Schriftart */
         body {
-            font-family: sans-serif;
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Dunkelblau/Schwarz (Default) */
+            color: #f8fafc; /* Weißer Text */
+            min-height: 100vh;
             margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Container-Styling für bessere Lesbarkeit */
-        .content-box {
-            background: white;
-            padding: 15px;
-            margin-bottom: 15px;
+        /* Styling für die quadratischen Buttons im Header */
+        .header-button {
+            width: 48px; 
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
         }
 
-        h1, h2 { color: #333; }
+        .header-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Styling für die Overlay-Modals (Menü und Info) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 50;
+        }
+
+        /* Spezielles Styling für das linke Navigationsmenü */
+        #nav-menu {
+            width: 80%; 
+            max-width: 300px;
+            height: 100%;
+            background-color: #1e293b; 
+            transform: translateX(-100%); /* Startposition außerhalb des Bildschirms */
+            transition: transform 0.3s ease-out;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #nav-menu.open {
+            transform: translateX(0); /* Eingeblendet */
+        }
+        
+        /* Spezielles Styling für das rechte Info-Modal */
+        #info-modal {
+            width: 85%; 
+            max-width: 400px;
+            height: auto;
+            max-height: 80%;
+            background-color: #1e293b;
+            border-radius: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            
+            /* Startposition außerhalb des Bildschirms nach oben verschieben */
+            transform: translate(-50%, -150vh);
+            transition: transform 0.3s ease-out;
+        }
+
+        #info-modal.open {
+            /* Zielposition: Zentriert in der Mitte */
+            transform: translate(-50%, -50%); /* Eingeblendet und zentriert */
+        }
+
+        /* Zusätzliche Farben für Akzente (Rot und Blau) */
+        .text-red-500 { color: #ef4444; }
+        .text-blue-400 { color: #60a5fa; }
+        /* Markdown-spezifische Stile für den Inhalt */
+        .prose :where(a):not(:where([class~="not-prose"] *)) { color: #60a5fa; }
+        .prose :where(blockquote):not(:where([class~="not-prose"] *)) { border-left-color: #ef4444; }
+        
+        /* Zusätzlicher Stil für den Bild-Platzhalter */
+        .image-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100px;
+            background-color: #374151; /* Grauer Hintergrund */
+            border: 2px dashed #9ca3af; /* Gestrichelte rote Linie */
+            color: #d1d5db;
+            font-weight: bold;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+/* Stellt sicher, dass Bilder responsiv sind und nicht über den Rand hinausgehen */
+.prose img {
+    max-width: 60%; 
+    max-height: auto;   
+    border-radius: 8px;*/
+}
+
+
+  
+
+/*Ihr Bild wird nun automatisch skaliert, um perfekt in den Hauptinhaltsbereich zu passen, ohne verzerrt zu werden.*/
     </style>
 </head>
-<body>
+<!-- Inline-Style für sofortigen dunklen Hintergrund (behebt "weißen Flash") -->
+<body style="background-color: #0f172a;">
 
-    <div class="content-box">
-        <h1>Teil A</h1>
-        <p>Dies ist der oberste Text-Bereich der Hauptseite.</p>
+    <!-- HAUPT-HEADER: Feste Kopfzeile mit Buttons und Titel -->
+    <header class="flex items-center justify-between p-3 bg-gray-900 shadow-lg sticky top-0 z-40">
+        <!-- LINKER BUTTON: Menü (Hamburger) -->
+        <button id="menu-button" class="header-button text-2xl text-red-500 hover:bg-gray-700" aria-label="Menü öffnen">
+            ☰
+        </button>
+
+        <!-- MITTLERE ÜBERSCHRIFT: Zweizeilig -->
+        <div class="flex-1 text-center px-2 truncate">
+            <h1 id="page-title" class="text-lg font-bold text-white leading-tight truncate">
+                <!-- Erster Teil der Überschrift (wird von JS gesetzt) -->
+            </h1>
+            <p id="page-subtitle" class="text-sm font-medium text-blue-400 leading-tight truncate">
+                <!-- Zweiter Teil der Überschrift (wird von JS gesetzt) -->
+            </p>
+        </div>
+
+        <!-- RECHTER BUTTON: Info (i) -->
+        <button id="info-button" class="header-button text-2xl font-bold text-blue-400 hover:bg-gray-700" aria-label="Informationen anzeigen">
+            🆘i
+        </button>
+    </header>
+
+    <!-- HAUPTINHALTSBEREICH: Hier werden die dynamischen Seiteninhalte geladen -->
+    <main id="content-container" class="flex-1 p-4 overflow-y-auto">
+        <!-- Inhalt wird hier dynamisch durch JavaScript als HTML (aus Markdown) eingefügt -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-xl font-semibold mb-4 text-red-400">Inhalt wird geladen...</h2>
+            <div id="page-content" class="prose prose-invert max-w-none">
+                <!-- Markdown-Inhalt erscheint hier -->
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL FÜR NAVIGATION (Linker Button) -->
+    <div id="nav-overlay" class="modal-overlay hidden">
+        <!-- Der Menü-Container selbst (slide-in) -->
+        <nav id="nav-menu" class="p-6 flex flex-col" onclick="event.stopPropagation();">
+            <h3 class="text-xl font-bold mb-6 pb-2 border-b border-gray-700 text-red-500">Navigation</h3>
+            <ul id="menu-list" class="space-y-3 flex-1">
+                <!-- Menüeinträge werden von JS hier eingefügt -->
+            </ul>
+            <button onclick="closeNavMenu()" class="mt-8 text-white bg-gray-700 p-2 rounded-lg hover:bg-gray-600 transition">Schließen</button>
+        </nav>
     </div>
 
-    <div id="platzhalter-b" class="content-box">
-        <p><em>Lade Inhalt B...</em></p>
+    <!-- MODAL FÜR INFO-TEXT (Rechter Button) -->
+    <div id="info-overlay" class="modal-overlay hidden flex items-center justify-center">
+        <div id="info-modal" class="p-6" onclick="event.stopPropagation();">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-700 mb-4">
+                <h3 class="text-xl font-bold text-blue-400">Seiten-Informationen</h3>
+                <button onclick="closeInfoModal()" class="text-xl font-bold text-white p-1 rounded-full hover:bg-gray-700 transition" aria-label="Info schließen">
+                    &times;
+                </button>
+            </div>
+            <div id="info-content" class="text-sm text-gray-300 max-h-96 overflow-y-auto">
+                <!-- Info-Text wird hier von JS eingefügt -->
+                <p>Bitte warten Sie, der Info-Text wird geladen...</p>
+            </div>
+        </div>
     </div>
 
-    <div class="content-box">
-        <h2>Teil C</h2>
-        <p>Dies ist der untere Text-Bereich, der nach dem Einfügen folgt.</p>
-    </div>
 
-    <script>
-        // Funktion zum Laden der Datei
-        // Wir suchen die Datei 'datei-b.html'
-        fetch('datei-b.html')
-            .then(response => {
-                // Prüfen, ob die Datei gefunden wurde (Status 200)
-                if (!response.ok) {
-                    throw new Error('Netzwerkantwort war nicht ok');
+    <script type="module">
+        // Globale Variablen für Firebase (Mandatory Canvas Setup - für zukünftige DB-Nutzung beibehalten)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db, auth;
+        let userId;
+        let isAuthReady = false;
+        window.currentInfoText = ''; // Globale Variable zur Speicherung des Info-Textes der aktuellen Seite
+
+        /**
+         * Initialisiert Firebase. (Beibehalten für mögliche zukünftige Nutzung der DB)
+         */
+        async function initializeFirebase() {
+            if (firebaseConfig) {
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        console.log("Firebase: Angemeldet mit Custom Token.");
+                    } else {
+                        await signInAnonymously(auth);
+                        console.log("Firebase: Anonym angemeldet.");
+                    }
+                    userId = auth.currentUser?.uid || 'anonymous';
+                    isAuthReady = true;
+
+                } catch (error) {
+                    console.error("Fehler bei der Firebase-Initialisierung oder Authentifizierung:", error);
                 }
-                return response.text(); // Den Textinhalt extrahieren
-            })
-            .then(htmlCode => {
-                // Den Platzhalter B suchen
-                const container = document.getElementById('platzhalter-b');
-                // Den geladenen HTML-Code einfügen
-                container.innerHTML = htmlCode;
-            })
-            .catch(error => {
-                console.error('Fehler beim Laden:', error);
-                document.getElementById('platzhalter-b').innerHTML = "<p>Fehler beim Laden von B.</p>";
-            });
-    </script>
+            } else {
+                userId = crypto.randomUUID();
+                isAuthReady = true;
+                console.log("Firebase Config fehlt, App läuft ohne persistente Daten.");
+            }
+        }
 
+        // ----------------------------------------------------------------------
+        // 1. DATENSTRUKTUR: Definiert nur Metadaten und Dateipfade
+        // ----------------------------------------------------------------------
+
+        /**
+         * Array von Seitenobjekten mit Dateipfaden statt direktem Inhalt.
+         */
+        const pages = [
+            {
+                id: 'start',
+                menuTitle: 'Startseite',
+                title: 'Hauptüberschrift',
+                subtitle: 'Willkommen in der App',
+                contentFile: 'content-start.md', // Dateipfad für den Hauptinhalt
+                infoFile: 'info-start.txt',     // Dateipfad für den Infotext
+            },
+            {
+                id: 'seite1',
+                menuTitle: 'Spezialthema A',
+                title: 'Erste Unterseite',
+                subtitle: 'Detailansicht Thema A',
+                contentFile: 'content-seite1.md',
+                infoFile: 'info-seite1.txt',
+            },
+            {
+                id: 'seite2',
+                menuTitle: 'Wichtige Kontakte',
+                title: 'Zweite Unterseite',
+                subtitle: 'Internes Adressbuch',
+                contentFile: 'content-seite2.md',
+                infoFile: 'info-seite2.txt',
+            },
+            {
+                id: 'seite3',
+                menuTitle: 'Grid-Experimente',
+                title: 'Dritte Unterseite',
+                subtitle: '2x2-Rahmen mit angepassten Fotos',
+                contentFile: 'content-seite3.md',
+                infoFile: 'info-seite3.txt',
+            },
+            {
+                id: 'seite4',
+                menuTitle: 'U4',
+                title: 'Vierte Unterseite',
+                subtitle: 'Internes Adressbuch',
+                contentFile: 'content-seite2.md',
+                infoFile: 'info-seite2.txt',
+            },
+            {
+                id: 'seite5',
+                menuTitle: 'Grid mit Text',
+                title: 'Fünfte Unterseite',
+                subtitle: '2x2-Rahmen mit angepassten Fotos und Text/Scrollbalken',
+                contentFile: 'grid.html',
+                infoFile: 'info-grid.txt',
+            },
+        ];
+
+        let currentPageId = pages[0].id;
+
+        // ----------------------------------------------------------------------
+        // 2. FUNKTIONEN: Asynchrones Laden von Dateien
+        // ----------------------------------------------------------------------
+
+        /**
+         * Lädt den Inhalt einer externen Datei asynchron per Fetch API.
+         * @param {string} filePath Der Pfad zur Datei.
+         * @returns {Promise<string>} Der Inhalt der Datei als String.
+         */
+        async function loadContentFromFile(filePath) {
+            try {
+                const response = await fetch(filePath);
+                if (!response.ok) {
+                    throw new Error(`Fehler ${response.status}: Datei nicht gefunden unter ${filePath}`);
+                }
+                return await response.text();
+            } catch (error) {
+                console.error("Fehler beim Laden des Inhalts:", error);
+                // Gibt eine Markdown-Fehlermeldung zurück
+                return `## ❌ Fehler beim Laden \n Der Inhalt konnte nicht geladen werden von **${filePath}**. \n Bitte prüfen Sie, ob die Datei existiert.`;
+            }
+        }
+
+
+        /**
+         * Öffnet das Navigationsmenü (linker Slide-in).
+         */
+        function openNavMenu() {
+            document.getElementById('nav-overlay').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('nav-menu').classList.add('open');
+            }, 10);
+        }
+
+        /**
+         * Schließt das Navigationsmenü.
+         */
+        function closeNavMenu() {
+            document.getElementById('nav-menu').classList.remove('open');
+            setTimeout(() => {
+                document.getElementById('nav-overlay').classList.add('hidden');
+            }, 300);
+        }
+
+        /**
+         * Öffnet das Info-Modal und zeigt den Info-Text der aktuellen Seite an.
+         */
+        function openInfoModal() {
+            // Der Info-Text wurde bereits in window.currentInfoText gespeichert (durch changePage)
+            document.getElementById('info-content').innerHTML = marked.parse(window.currentInfoText || 'Keine Informationen für diese Seite verfügbar.');
+            
+            document.getElementById('info-overlay').classList.remove('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('info-modal').classList.add('open');
+            }, 10);
+        }
+
+        /**
+         * Schließt das Info-Modal.
+         */
+        function closeInfoModal() {
+            document.getElementById('info-modal').classList.remove('open');
+            setTimeout(() => {
+                document.getElementById('info-overlay').classList.add('hidden');
+            }, 300);
+        }
+
+        /**
+         * Ändert die aktuell angezeigte Seite und lädt die Inhalte aus den Dateien.
+         * @param {string} pageId Die ID der Seite, die geladen werden soll.
+         */
+        async function changePage(pageId) {
+            const newPage = pages.find(p => p.id === pageId);
+            if (!newPage) {
+                console.error(`Seite mit ID ${pageId} nicht gefunden.`);
+                return;
+            }
+
+            currentPageId = pageId;
+
+            // 1. Header sofort aktualisieren
+            document.getElementById('page-title').textContent = newPage.title;
+            document.getElementById('page-subtitle').textContent = newPage.subtitle;
+            
+            // Ladehinweis anzeigen, während Fetch läuft
+            document.getElementById('page-content').innerHTML = '<p class="text-gray-400">Lade Inhalt von ' + newPage.contentFile + '...</p>';
+
+
+            // 2. Inhalte parallel laden (Hauptinhalt und Info-Text)
+            const [rawContent, rawInfo] = await Promise.all([
+                loadContentFromFile(newPage.contentFile),
+                loadContentFromFile(newPage.infoFile)
+            ]);
+
+            // 3. Hauptinhalt aktualisieren (Markdown zu HTML)
+            document.getElementById('page-content').innerHTML = marked.parse(rawContent);
+            
+            // 4. Info-Text für später speichern (wird von openInfoModal verwendet)
+            window.currentInfoText = rawInfo;
+
+            // 5. Navigationsmenü schließen (falls offen)
+            closeNavMenu();
+        }
+
+        /**
+         * Erzeugt die Menüeinträge dynamisch basierend auf dem 'pages' Array.
+         */
+        function renderMenu() {
+            const menuList = document.getElementById('menu-list');
+            menuList.innerHTML = '';
+
+            pages.forEach(page => {
+                const li = document.createElement('li');
+                li.className = 'text-white hover:bg-gray-700 p-3 rounded-lg cursor-pointer transition';
+                li.textContent = page.menuTitle;
+
+                li.addEventListener('click', () => changePage(page.id));
+                menuList.appendChild(li);
+            });
+        }
+
+        // ----------------------------------------------------------------------
+        // 3. EVENT-LISTENER und START
+        // ----------------------------------------------------------------------
+
+        // Global zugänglich machen (wichtig für die onclick-Attribute im HTML)
+        window.openNavMenu = openNavMenu;
+        window.closeNavMenu = closeNavMenu;
+        window.openInfoModal = openInfoModal;
+        window.closeInfoModal = closeInfoModal;
+        window.changePage = changePage;
+
+        /**
+         * Startfunktion: Wird ausgeführt, sobald das DOM vollständig geladen ist.
+         */
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Führt die Firebase-Initialisierung asynchron durch
+            await initializeFirebase();
+            console.log(`App-ID: ${appId}, User-ID: ${userId}`);
+            
+            // Event-Listener für Header-Buttons
+            document.getElementById('menu-button').addEventListener('click', openNavMenu);
+            document.getElementById('info-button').addEventListener('click', openInfoModal);
+
+            // Event-Listener, um Modals durch Klick auf das Overlay zu schließen
+            document.getElementById('nav-overlay').addEventListener('click', closeNavMenu);
+            document.getElementById('info-overlay').addEventListener('click', closeInfoModal);
+
+            // 1. Menüstruktur rendern
+            renderMenu();
+
+            // 2. Startseite laden (asynchron)
+            changePage(currentPageId);
+        });
+    </script>
 </body>
 </html>
+
