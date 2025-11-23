@@ -93,11 +93,13 @@ body{
   background:transparent;
 }
 
+
+
 /* Bild unverzerrt vollständig anzeigen: */
 .frame img{
   width:100%;
   height:100%;
-  object-fit:contain; /* wichtig: whole image visible, no distortion, letterboxing if needed */
+  /*!object-fit:cover;  wichtig: whole image visible, no distortion, letterboxing if needed */
   object-position:center;
   display:block;
   user-select:none;
@@ -127,8 +129,8 @@ body{
   </div>
 
   <div class="frame">
-    <div class="content">
-      <p>Dies ist der Text neben dem Bild. Wäre gut, wenn das funktionieren würde 😃. Was passiert, wenn der Text nicht mehr in den Rahmen passt. Wird er abgeschnitten? Gibt rs einen Scrollbalken?</p>
+    <div class="content scroll-text">
+      Dies ist der Text neben dem Bild. Wäre gut, wenn das funktionieren würde 😃. Was passiert, wenn der Text nicht mehr in den Rahmen passt. Wird er abgeschnitten? Gibt rs einen Scrollbalken?
     </div>
   </div>
 
@@ -137,6 +139,22 @@ body{
 <!--      <h3 style="margin-top:0">Über das Bild</h3> -->
       
         Dies ist der Text neben dem Bild. Da wir nun die Klasse "scroll-text" hinzugefügt haben,
+        passiert Folgendes: Wenn der Text zu lang für den Rahmen ist (so wie dieser hier, den ich
+        extra lang mache), wird er nicht mehr abgeschnitten.
+      
+      
+        Stattdessen erscheint am rechten Rand ein Scrollbalken. Das ist besonders wichtig auf
+        Handys, wo der Platz begrenzt ist. Du kannst hier so viel schreiben, wie du willst.
+        Der Text bleibt im Rahmen!
+              Dies ist der Text neben dem Bild. Da wir nun die Klasse "scroll-text" hinzugefügt haben,
+        passiert Folgendes: Wenn der Text zu lang für den Rahmen ist (so wie dieser hier, den ich
+        extra lang mache), wird er nicht mehr abgeschnitten.
+      
+      
+        Stattdessen erscheint am rechten Rand ein Scrollbalken. Das ist besonders wichtig auf
+        Handys, wo der Platz begrenzt ist. Du kannst hier so viel schreiben, wie du willst.
+        Der Text bleibt im Rahmen!
+              Dies ist der Text neben dem Bild. Da wir nun die Klasse "scroll-text" hinzugefügt haben,
         passiert Folgendes: Wenn der Text zu lang für den Rahmen ist (so wie dieser hier, den ich
         extra lang mache), wird er nicht mehr abgeschnitten.
       
