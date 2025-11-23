@@ -1,0 +1,12 @@
+Diese Kontaktliste ist nur für interne Zwecke bestimmt.<br>
+<br>
+​Bei dringenden Anfragen wenden Sie sich bitte direkt an die zentrale Vermittlung.<br>
+<br>
+neu<br>
+<br>
+meuneu<br>
+<br>
+ende
+<div class="image-placeholder">
+<img src="dummy.jpg" alt="Eine Beschreibung meines DummyBildes">
+</div>

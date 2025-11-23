@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile App Layout</title>
+    <!-- Tailwind CSS CDN für einfache und responsive Gestaltung -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js CDN, um Markdown-Inhalte aus dem JS-Array in HTML umzuwandeln -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <!-- Google Fonts: Inter für bessere Lesbarkeit -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Grundlegende dunkle Stile und Schriftart */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Dunkelblau/Schwarz (Zur Sicherheit, falls Inline-Style überschrieben wird) */
+            color: #f8fafc; /* Weißer Text */
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Styling für die quadratischen Buttons im Header */
+        .header-button {
+            width: 48px; /* Quadratische Größe */
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px; /* Abgerundete Ecken */
+            transition: background-color 0.2s;
+        }
+
+        .header-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Styling für die Overlay-Modals (Menü und Info) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 50;
+            /* display: none; wird über die Klasse 'hidden' im HTML gesteuert */
+        }
+
+        /* Spezielles Styling für das linke Navigationsmenü */
+        #nav-menu {
+            width: 80%; /* Mobile Breite */
+            max-width: 300px; /* Maximale Breite für größere Bildschirme */
+            height: 100%;
+            background-color: #1e293b; /* Etwas heller als der Hintergrund */
+            transform: translateX(-100%); /* Startposition außerhalb des Bildschirms */
+            transition: transform 0.3s ease-out;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #nav-menu.open {
+            transform: translateX(0); /* Eingeblendet */
+        }
+        
+        /* Spezielles Styling für das rechte Info-Modal */
+        #info-modal {
+            width: 85%; /* Mobile Breite */
+            max-width: 400px;
+            height: auto;
+            max-height: 80%;
+            background-color: #1e293b;
+            border-radius: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            
+            /* Startposition außerhalb des Bildschirms nach oben verschieben */
+            transform: translate(-50%, -150vh);
+            transition: transform 0.3s ease-out;
+        }
+
+        #info-modal.open {
+            /* Zielposition: Zentriert in der Mitte */
+            transform: translate(-50%, -50%); /* Eingeblendet und zentriert */
+        }
+
+        /* Zusätzliche Farben für Akzente (Rot und Blau) */
+        .text-red-500 { color: #ef4444; }
+        .text-blue-400 { color: #60a5fa; }
+        /* Markdown-spezifische Stile für den Inhalt */
+        .prose :where(a):not(:where([class~="not-prose"] *)) { color: #60a5fa; }
+        .prose :where(blockquote):not(:where([class~="not-prose"] *)) { border-left-color: #ef4444; }
+    </style>
+</head>
+<!-- BUGFIX: Inline-Style für sofortigen dunklen Hintergrund, um den weißen Flash zu vermeiden -->
+<body style="background-color: #0f172a;">
+
+    <!-- HAUPT-HEADER: Feste Kopfzeile mit Buttons und Titel -->
+    <header class="flex items-center justify-between p-3 bg-gray-900 shadow-lg sticky top-0 z-40">
+        <!-- LINKER BUTTON: Menü (Hamburger) -->
+        <button id="menu-button" class="header-button text-2xl text-red-500 hover:bg-gray-700" aria-label="Menü öffnen">
+            ☰
+        </button>
+
+        <!-- MITTLERE ÜBERSCHRIFT: Zweizeilig -->
+        <div class="flex-1 text-center px-2 truncate">
+            <h1 id="page-title" class="text-lg font-bold text-white leading-tight truncate">
+                <!-- Erster Teil der Überschrift (wird von JS gesetzt) -->
+            </h1>
+            <p id="page-subtitle" class="text-sm font-medium text-blue-400 leading-tight truncate">
+                <!-- Zweiter Teil der Überschrift (wird von JS gesetzt) -->
+            </p>
+        </div>
+
+        <!-- RECHTER BUTTON: Info (i) -->
+        <button id="info-button" class="header-button text-2xl font-bold text-blue-400 hover:bg-gray-700" aria-label="Informationen anzeigen">
+            i
+        </button>
+    </header>
+
+    <!-- HAUPTINHALTSBEREICH: Hier werden die dynamischen Seiteninhalte geladen -->
+    <main id="content-container" class="flex-1 p-4 overflow-y-auto">
+        <!-- Inhalt wird hier dynamisch durch JavaScript als HTML (aus Markdown) eingefügt -->
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+            <h2 class="text-xl font-semibold mb-4 text-red-400">Inhalt wird geladen...</h2>
+            <div id="page-content" class="prose prose-invert max-w-none">
+                <!-- Markdown-Inhalt erscheint hier -->
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL FÜR NAVIGATION (Linker Button) -->
+    <!-- Die Klasse 'hidden' sorgt dafür, dass das Overlay sofort unsichtbar ist. -->
+    <div id="nav-overlay" class="modal-overlay hidden">
+        <!-- Der Menü-Container selbst (slide-in) -->
+        <nav id="nav-menu" class="p-6 flex flex-col" onclick="event.stopPropagation();">
+            <h3 class="text-xl font-bold mb-6 pb-2 border-b border-gray-700 text-red-500">Navigation</h3>
+            <ul id="menu-list" class="space-y-3 flex-1">
+                <!-- Menüeinträge werden von JS hier eingefügt -->
+            </ul>
+            <button onclick="closeNavMenu()" class="mt-8 text-white bg-gray-700 p-2 rounded-lg hover:bg-gray-600 transition">Schließen</button>
+        </nav>
+        <!-- Klick auf Overlay schließt das Menü -->
+    </div>
+
+    <!-- MODAL FÜR INFO-TEXT (Rechter Button) -->
+    <!-- Die Klasse 'hidden' sorgt dafür, dass das Overlay sofort unsichtbar ist. -->
+    <div id="info-overlay" class="modal-overlay hidden flex items-center justify-center">
+        <div id="info-modal" class="p-6" onclick="event.stopPropagation();">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-700 mb-4">
+                <h3 class="text-xl font-bold text-blue-400">Seiten-Informationen</h3>
+                <button onclick="closeInfoModal()" class="text-xl font-bold text-white p-1 rounded-full hover:bg-gray-700 transition" aria-label="Info schließen">
+                    &times;
+                </button>
+            </div>
+            <div id="info-content" class="text-sm text-gray-300 max-h-96 overflow-y-auto">
+                <!-- Info-Text wird hier von JS eingefügt -->
+                <p>Bitte warten Sie, der Info-Text wird geladen...</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // Globale Variablen für Firebase (Mandatory Canvas Setup - wird hier nur initialisiert, aber nicht für DB genutzt)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db, auth;
+        let userId;
+        let isAuthReady = false;
+
+        /**
+         * Initialisiert Firebase und führt die Authentifizierung durch.
+         */
+        async function initializeFirebase() {
+            if (firebaseConfig) {
+                try {
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        console.log("Firebase: Angemeldet mit Custom Token.");
+                    } else {
+                        await signInAnonymously(auth);
+                        console.log("Firebase: Anonym angemeldet.");
+                    }
+                    userId = auth.currentUser?.uid || 'anonymous';
+                    isAuthReady = true;
+
+                } catch (error) {
+                    console.error("Fehler bei der Firebase-Initialisierung oder Authentifizierung:", error);
+                }
+            } else {
+                 // Falls keine Firebase Config vorhanden ist, weiterhin die App starten
+                userId = crypto.randomUUID();
+                isAuthReady = true;
+                console.log("Firebase Config fehlt, App läuft ohne persistente Daten.");
+            }
+        }
+
+        // ----------------------------------------------------------------------
+        // 1. DATENSTRUKTUR: Hier werden alle Seiteninhalte und Infotexte definiert
+        // ----------------------------------------------------------------------
+
+        /**
+         * Array von Seitenobjekten.
+         * Jedes Objekt repräsentiert eine Unterseite (Subpage).
+         * title und subtitle erscheinen im Header.
+         * content und infoText werden im Hauptbereich bzw. im Info-Modal angezeigt.
+         */
+        const pages = [
+            {
+                id: 'start',
+                menuTitle: 'Startseite',
+                title: 'Hauptüberschrift',
+                subtitle: 'Willkommen in der App',
+                // Markdown-Inhalt für die Hauptseite
+            content: '# Startseite  \n<br>Dies ist die **Startseite** der Anwendung.<br><br>Hier finden Sie eine allgemeine Einführung.<br><br>* Das Menü links (☰) enthält die Unterseiten.<br><br>* Der Info-Button rechts (i) liefert spezifische Informationen zur aktuell angezeigten Seite.<br><br>Die App ist vollständig responsiv und für Mobilgeräte optimiert.<br><br>Hat Marion das verstanden?',
+                infoText: 'Diese Startseite bietet einen Überblick über die App-Funktionalität und die verwendeten Technologien (HTML, Tailwind CSS, JavaScript). Der Code ist in einer einzigen Datei enthalten.',
+            },
+            {
+                id: 'seite1',
+                menuTitle: 'Spezialthema A',
+                title: 'Erste Unterseite',
+                subtitle: 'Detailansicht Thema A',
+                content: '## Datenanalyse A\nDies ist der Inhalt für das **Spezialthema A**.\n\n> "Der größte Feind des Wissens ist nicht die Ignoranz, sondern die Illusion des Wissens." - Stephen Hawking\n\nHier könnten komplexe Daten, Berichte oder spezifische Analysen dargestellt werden.',
+                infoText: 'Thema A konzentriert sich auf die Analyse historischer Daten und zukünftiger Prognosen in unserem Kernbereich. **Wichtig:** Diese Seite erfordert eine Expertenlesung. Der Weihnachtsmann kommt dafür am 15. zum Feuergraben.',
+            },
+            {
+                id: 'seite2',
+                menuTitle: 'Wichtige Kontakte',
+                title: 'Zweite Unterseite',
+                subtitle: 'Internes Adressbuch',
+                content: '## Kontaktinformationen\n\n| Rolle | Name | E-Mail | Hallo Kira |',
+                infoText: 'Diese Seite listet alle wichtigen internen Ansprechpartner auf. Die Informationen werden regelmäßig aktualisiert (simuliert).',
+            }
+        ];
+
+        let currentPageId = pages[0].id; // Starte mit der ersten Seite
+
+        // ----------------------------------------------------------------------
+        // 2. FUNKTIONEN: Steuerung von Menü, Info-Modal und Seiten-Rendering
+        // ----------------------------------------------------------------------
+
+        /**
+         * Öffnet das Navigationsmenü (linker Slide-in).
+         */
+        function openNavMenu() {
+            // Verwende remove('hidden') anstelle von style.display
+            document.getElementById('nav-overlay').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('nav-menu').classList.add('open');
+            }, 10); // Kleine Verzögerung für CSS-Transition
+        }
+
+        /**
+         * Schließt das Navigationsmenü.
+         */
+        function closeNavMenu() {
+            document.getElementById('nav-menu').classList.remove('open');
+            setTimeout(() => {
+                // Verwende add('hidden') anstelle von style.display
+                document.getElementById('nav-overlay').classList.add('hidden');
+            }, 300); // Warte, bis die Transition abgeschlossen ist
+        }
+
+        /**
+         * Öffnet das Info-Modal und zeigt den Info-Text der aktuellen Seite an.
+         */
+        function openInfoModal() {
+            const currentPage = pages.find(p => p.id === currentPageId);
+            // Info-Inhalt mit dem Text der aktuellen Seite füllen
+            document.getElementById('info-content').innerHTML = marked.parse(currentPage.infoText || 'Keine Informationen für diese Seite verfügbar.');
+            
+            // Overlay sichtbar machen (entfernt die 'hidden' Klasse)
+            document.getElementById('info-overlay').classList.remove('hidden');
+            
+            // Modal mit Verzögerung (für Slide-Animation) öffnen
+            setTimeout(() => {
+                document.getElementById('info-modal').classList.add('open');
+            }, 10);
+        }
+
+        /**
+         * Schließt das Info-Modal.
+         */
+        function closeInfoModal() {
+            document.getElementById('info-modal').classList.remove('open');
+            setTimeout(() => {
+                // Overlay verstecken (fügt die 'hidden' Klasse hinzu)
+                document.getElementById('info-overlay').classList.add('hidden');
+            }, 300);
+        }
+
+        /**
+         * Ändert die aktuell angezeigte Seite.
+         * @param {string} pageId Die ID der Seite, die geladen werden soll.
+         */
+        function changePage(pageId) {
+            const newPage = pages.find(p => p.id === pageId);
+            if (!newPage) {
+                console.error(`Seite mit ID ${pageId} nicht gefunden.`);
+                return;
+            }
+
+            currentPageId = pageId;
+
+            // 1. Header aktualisieren
+            document.getElementById('page-title').textContent = newPage.title;
+            document.getElementById('page-subtitle').textContent = newPage.subtitle;
+
+            // 2. Hauptinhalt aktualisieren (Markdown zu HTML)
+            // Die `marked.parse` Funktion wird verwendet, um den Markdown-Inhalt des Arrays in HTML umzuwandeln.
+            document.getElementById('page-content').innerHTML = marked.parse(newPage.content);
+
+            // 3. Navigationsmenü schließen (falls offen)
+            closeNavMenu();
+        }
+
+        /**
+         * Erzeugt die Menüeinträge dynamisch basierend auf dem 'pages' Array.
+         */
+        function renderMenu() {
+            const menuList = document.getElementById('menu-list');
+            menuList.innerHTML = ''; // Liste leeren
+
+            pages.forEach(page => {
+                const li = document.createElement('li');
+                // Verwende Tailwind Klassen für Styling
+                li.className = 'text-white hover:bg-gray-700 p-3 rounded-lg cursor-pointer transition';
+                li.textContent = page.menuTitle;
+
+                // Füge Event-Listener hinzu, um die Seite zu wechseln
+                li.addEventListener('click', () => changePage(page.id));
+                menuList.appendChild(li);
+            });
+        }
+
+        // ----------------------------------------------------------------------
+        // 3. EVENT-LISTENER und START
+        // ----------------------------------------------------------------------
+
+        // Global zugänglich machen (wichtig für die onclick-Attribute im HTML)
+        window.openNavMenu = openNavMenu;
+        window.closeNavMenu = closeNavMenu;
+        window.openInfoModal = openInfoModal;
+        window.closeInfoModal = closeInfoModal;
+        window.changePage = changePage; // Für den Initialaufruf
+
+        /**
+         * Startfunktion: Wird ausgeführt, sobald das DOM vollständig geladen ist.
+         */
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialisiere Firebase (Async-Call)
+            await initializeFirebase();
+            console.log(`App-ID: ${appId}, User-ID: ${userId}`);
+            
+            // Event-Listener für Header-Buttons
+            document.getElementById('menu-button').addEventListener('click', openNavMenu);
+            document.getElementById('info-button').addEventListener('click', openInfoModal);
+
+            // Event-Listener, um Modals durch Klick auf das Overlay zu schließen
+            document.getElementById('nav-overlay').addEventListener('click', closeNavMenu);
+            document.getElementById('info-overlay').addEventListener('click', closeInfoModal);
+
+            // 1. Menüstruktur rendern
+            renderMenu();
+
+            // 2. Startseite laden
+            changePage(currentPageId);
+        });
+    </script>
+</body>
+</html>
+
